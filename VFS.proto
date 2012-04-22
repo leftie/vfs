@@ -1,0 +1,21 @@
+package vfs.impl.proto;
+
+message SuperNode { //one per vfs
+    required int32 blockSize = 1;
+}
+
+message DirEntry {
+    required int32 inode = 1;
+    required string name = 2;
+}
+
+message Node {
+    required int32 no = 1; // blockNo
+    required int32 parentNo = 2;
+    required string name = 3;
+    required int32 flags = 4;
+    required int32 dataBlockNo = 5;
+    optional bytes checksum = 6; //for checksummed files
+    required int64 timestamp = 7;
+    optional int64 size = 8; //for files
+}
