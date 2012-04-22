@@ -118,7 +118,7 @@ class ProtoVFS implements VFileSystem {
 
     @Nullable
     ProtoVFile getParent(final ProtoVFile protoVFile) {
-        log.debug("getParent({})" + protoVFile);
+        log.debug("getParent({})", protoVFile);
         final int parentNo = protoVFile.getProtoNode().getParentNo();
         if (parentNo == -1) {
             return null;
@@ -150,9 +150,7 @@ class ProtoVFS implements VFileSystem {
         final BlockReader metaReader = device.openReader(fileNo);
         final VFS.Node metaNode = doReadNodeFrom(metaReader);
         final int dataBlockNo = metaNode.getDataBlockNo();
-        if (log.isInfoEnabled()) {
-            log.debug("data block for " + file + " is " + dataBlockNo);
-        }
+        log.debug("data block for {} is {}", file.getAbsoluteName(), dataBlockNo);
         try {
             final BlockReader dataReader = device.openReader(dataBlockNo);
             try {
@@ -425,7 +423,7 @@ class ProtoVFS implements VFileSystem {
             return normalize(cfg.getSeparator() + childName);
         }
         String newAbsName = parentDir.getAbsoluteName();
-        if (newAbsName.charAt(newAbsName.length() -1 ) != cfg.getSeparatorChar()) {
+        if (newAbsName.charAt(newAbsName.length() - 1) != cfg.getSeparatorChar()) {
             newAbsName = newAbsName + cfg.getSeparator() + childName;
         } else {
             newAbsName += childName;
