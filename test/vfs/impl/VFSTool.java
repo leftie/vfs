@@ -19,11 +19,11 @@ public class VFSTool extends TestCase {
     public void testListTmpFile() throws Exception {
         final VFileSystem writeVFS = new ProtoVFSFactory().create(new File("/tmp/_test.vfs"), true, new VFileSystemConfig(64, true, true, '/'));
 
-        final VFile first = writeVFS.fileManager().mkDir(writeVFS.root(), "01");
+        final VFile first = writeVFS.fileManager().mkDir(writeVFS.getRoot(), "01");
         final VFile fFile = writeVFS.fileManager().touch(first, "foo.txt");
-        final VFile second = writeVFS.fileManager().mkDir(writeVFS.root(), "02");
+        final VFile second = writeVFS.fileManager().mkDir(writeVFS.getRoot(), "02");
         final VFile sFile = writeVFS.fileManager().touch(second, "bar.txt");
-        final VFile third = writeVFS.fileManager().mkDir(writeVFS.root(), "03");
+        final VFile third = writeVFS.fileManager().mkDir(writeVFS.getRoot(), "03");
         final VFile tFile = writeVFS.fileManager().touch(third, "baz.txt");
 
         System.out.println(Cf.list(first.list()));
@@ -33,12 +33,12 @@ public class VFSTool extends TestCase {
         writeVFS.close();
 
         final VFileSystem readVfs = new ProtoVFSFactory().open(new File("/tmp/_test.vfs"), new VFileSystemConfig(64, true, true, '/'));
-        doPrint(readVfs.root());
+        doPrint(readVfs.getRoot());
         readVfs.close();
     }
 
     void doPrint(final VFile file) {
-        log.info(file.getAbsoluteName());
+        log.info(file.getAbsolutePath());
         if (file.isDir()) {
             for (final VFile child : file.list()) {
                 doPrint(child);

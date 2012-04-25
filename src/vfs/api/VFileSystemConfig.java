@@ -6,17 +6,17 @@ public class VFileSystemConfig {
 
     private final int blockSize;
     private final boolean doCompress;
-    private final boolean doMd5;
+    private final boolean doChecksum;
     private final char separatorChar;
     private final String separator;
 
-    public VFileSystemConfig(final int blockSize, final boolean doCompress, final boolean doMd5, final char separatorChar) {
+    public VFileSystemConfig(final int blockSize, final boolean doCompress, final boolean doChecksum, final char separatorChar) {
         if (blockSize < MIN_BLOCK_SIZE) {
             throw new RuntimeException("block size too small. min allowed block size is " + MIN_BLOCK_SIZE);
         }
         this.blockSize = blockSize;
         this.doCompress = doCompress;
-        this.doMd5 = doMd5;
+        this.doChecksum = doChecksum;
         this.separatorChar = separatorChar;
         this.separator = String.valueOf(separatorChar);
     }
@@ -29,8 +29,8 @@ public class VFileSystemConfig {
         return doCompress;
     }
 
-    public boolean isDoMd5() {
-        return doMd5;
+    public boolean isDoChecksum() {
+        return doChecksum;
     }
 
     public char getSeparatorChar() {

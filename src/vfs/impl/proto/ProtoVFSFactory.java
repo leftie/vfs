@@ -28,7 +28,7 @@ public class ProtoVFSFactory implements VFileSystemFactory {
         final BlockAllocator alloc = new NaiveAlloc(bitset);
         final BlockDevice device = new BlockDevice(cfg.getBlockSize(), rafStuff, rafStuff, alloc);
         final ProtoVFS vfs = new ProtoVFS(device, alloc, cfg);
-        if (vfs.root() == null) {
+        if (vfs.getRoot() == null) {
             throw new VFSCorruptException();
         }
         return vfs;

@@ -18,14 +18,14 @@ final class ProtoVFile implements VFile {
     private final NodeFlags flags;
     private final VFS.Node protoNode;
 
-    private final String absoluteName;
+    private final String absolutePath;
 
-    ProtoVFile(final ProtoVFS fs, final String name, final String absoluteName, final NodeFlags flags, final VFS.Node protoNode) {
+    ProtoVFile(final ProtoVFS fs, final String name, final String absolutePath, final NodeFlags flags, final VFS.Node protoNode) {
         this.fs = fs;
         this.name = name;
         this.flags = flags;
         this.protoNode = protoNode;
-        this.absoluteName = absoluteName;
+        this.absolutePath = absolutePath;
     }
 
     @Override
@@ -63,14 +63,14 @@ final class ProtoVFile implements VFile {
     }
 
     @Override
-    public String getAbsoluteName() {
-        return absoluteName;
+    public String getAbsolutePath() {
+        return absolutePath;
     }
 
     @NotNull
     @Override
     public Iterable<VFile> list() {
-        final Iterator<ProtoVFile> children = fs.list(fs.resolve(this.getAbsoluteName())).iterator();
+        final Iterator<ProtoVFile> children = fs.list(fs.resolve(this.getAbsolutePath())).iterator();
         return Cu.iterable(
                 new Iterator<VFile>() {
                     @Override
@@ -96,22 +96,18 @@ final class ProtoVFile implements VFile {
     }
 
     @Override
-    public InputStream openInput() throws VFSException {
-        return fs.openInput(fs.resolve(this.getAbsoluteName()));
+    public InputStream openFileInput() throws VFSException {
+        return fs.openInput(fs.resolve(this.getAbsolutePath()));
     }
 
     @Override
-    public OutputStream openOutput() throws VFSException {
-        return fs.openOutput(fs.resolve(this.getAbsoluteName()));
+    public OutputStream openFileOutput() throws VFSException {
+        return fs.openOutput(fs.resolve(this.getAbsolutePath()));
     }
 
     @Override
     public String toString() {
-        return "ProtoVFile{" +
-                "path='" + absoluteName + '\'' +
-                ", flags=" + flags +
-                ", protoNode=" + protoNode +
-                '}';
+        return "ProtoVFile{" + absolutePath + "}";
     }
 
     @Override
@@ -121,13 +117,13 @@ final class ProtoVFile implements VFile {
 
         final ProtoVFile that = (ProtoVFile) o;
 
-        if (!getAbsoluteName().equals(that.getAbsoluteName())) return false;
+        if (!absolutePath.equals(that.absolutePath)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return getAbsoluteName().hashCode();
+        return absolutePath.hashCode();
     }
 }

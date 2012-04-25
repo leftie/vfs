@@ -73,7 +73,7 @@ class ProtoVFS implements VFileSystem {
     }
 
     @Override
-    public ProtoVFile root() {
+    public ProtoVFile getRoot() {
         final InputStream is = device.openReader(ROOT_BLOCK_NO).asStream();
         try {
             final VFS.Node rootNode = VFS.Node.parseDelimitedFrom(is);
@@ -123,9 +123,9 @@ class ProtoVFS implements VFileSystem {
         if (parentNo == -1) {
             return null;
         }
-        final String abs = protoVFile.getAbsoluteName();
+        final String abs = protoVFile.getAbsolutePath();
         final String parentPath = abs.substring(0, abs.lastIndexOf(cfg.getSeparatorChar()));
-        final ProtoVFile parent = select(parentPath);
+        final ProtoVFile parent = resolve(parentPath);
         if (parent == null) {
             throw new VFileNotFoundException(parentPath);
         }
@@ -150,7 +150,7 @@ class ProtoVFS implements VFileSystem {
         final BlockReader metaReader = device.openReader(fileNo);
         final VFS.Node metaNode = doReadNodeFrom(metaReader);
         final int dataBlockNo = metaNode.getDataBlockNo();
-        log.debug("data block for {} is {}", file.getAbsoluteName(), dataBlockNo);
+        log.debug("data block for {} is {}", file.getAbsolutePath(), dataBlockNo);
         try {
             final BlockReader dataReader = device.openReader(dataBlockNo);
             try {
@@ -281,7 +281,7 @@ class ProtoVFS implements VFileSystem {
     ProtoVFile resolve(String path) throws VFileNotFoundException {
         path = normalize(path);
         final StringTokenizer tkz = new StringTokenizer(path, cfg.getSeparator());
-        ProtoVFile current = this.root();
+        ProtoVFile current = this.getRoot();
         while (tkz.hasMoreTokens()) {
             final String nameToken = tkz.nextToken();
             current = current.child(nameToken);
@@ -380,7 +380,7 @@ class ProtoVFS implements VFileSystem {
     }
 
     ProtoVFile mkDir(final ProtoVFile parentDir, final String dirName) {
-        log.debug("mkdir ({}),({})", parentDir.getAbsoluteName(), dirName);
+        log.debug("mkdir ({}),({})", parentDir.getAbsolutePath(), dirName);
         if (!parentDir.isDir()) {
             throw new IllegalArgumentException(parentDir + " is not a dir");
         }
@@ -422,7 +422,7 @@ class ProtoVFS implements VFileSystem {
         if (parentDir == null) {
             return normalize(cfg.getSeparator() + childName);
         }
-        String newAbsName = parentDir.getAbsoluteName();
+        String newAbsName = parentDir.getAbsolutePath();
         if (newAbsName.charAt(newAbsName.length() - 1) != cfg.getSeparatorChar()) {
             newAbsName = newAbsName + cfg.getSeparator() + childName;
         } else {
@@ -432,15 +432,10 @@ class ProtoVFS implements VFileSystem {
     }
 
 
-    @Nullable
-    ProtoVFile select(final String fullPath) {
-        return resolve(fullPath);
-    }
-
     public ProtoVFile mkDirs(String fullPath) {
         fullPath = normalize(fullPath);
         final StringTokenizer tkz = new StringTokenizer(fullPath, cfg.getSeparator());
-        ProtoVFile prev = root();
+        ProtoVFile prev = getRoot();
         boolean makingNew = false;
         while (tkz.hasMoreTokens()) {
             final String pathPart = tkz.nextToken();
@@ -472,7 +467,7 @@ class ProtoVFS implements VFileSystem {
     }
 
     ProtoVFile resolve(final VFile vfile) {
-        return resolve(vfile.getAbsoluteName());
+        return resolve(vfile.getAbsolutePath());
     }
 
     private boolean deleteChild(final ProtoVFile parent, final ProtoVFile child) {

@@ -10,7 +10,7 @@ public interface VFileSystemFactory {
 
     VFileSystem create(final ByteBuffer bb, final VFileSystemConfig cfg);
 
-    VFileSystem create(final File target, final boolean overwrite, final VFileSystemConfig cfg);
+    VFileSystem create(final File target, final boolean overwrite, final VFileSystemConfig cfg) throws VFSException;
 
     VFileSystem open(final File target, final VFileSystemConfig cfg) throws VFSCorruptException, VFSException;
 

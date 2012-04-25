@@ -30,8 +30,8 @@ class ProtoFileManager implements VFileManager {
     }
 
     @Override
-    public VFile select(@NotNull final String fullPath) {
-        return vfs.select(checkFullPath(fullPath));
+    public VFile resolve(@NotNull final String fullPath) {
+        return vfs.resolve(checkFullPath(fullPath));
     }
 
     @Override

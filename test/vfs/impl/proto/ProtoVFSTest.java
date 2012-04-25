@@ -1,6 +1,8 @@
 package vfs.impl.proto;
 
 import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,7 @@ public class ProtoVFSTest extends TestCase {
     VFileSystem vfs;
 
     @Override
+    @Before
     public void setUp() throws Exception {
         super.setUp();
         vfs = initVFS();
@@ -42,6 +45,7 @@ public class ProtoVFSTest extends TestCase {
     }
 
     @Override
+    @After
     public void tearDown() throws Exception {
         vfs.close();
         super.tearDown();
@@ -49,9 +53,9 @@ public class ProtoVFSTest extends TestCase {
 
     @Test
     public void testRootIsDirAndHaveNothingInEmptyFs() throws Exception {
-        final VFile root = vfs.root();
+        final VFile root = vfs.getRoot();
         assertEquals("/", root.getName());
-        assertEquals("/", root.getAbsoluteName());
+        assertEquals("/", root.getAbsolutePath());
         assertTrue(root.isDir());
         assertFalse(root.isFile());
         assertFalse(root.list().iterator().hasNext());
@@ -59,38 +63,38 @@ public class ProtoVFSTest extends TestCase {
 
     @Test
     public void testTwoRootsAreEqual() throws Exception {
-        assertEquals(vfs.root(), vfs.root());
+        assertEquals(vfs.getRoot(), vfs.getRoot());
     }
 
     @Test
     public void testRootHasNullParent() throws Exception {
-        assertNull(vfs.root().getParent());
+        assertNull(vfs.getRoot().getParent());
     }
 
     @Test
     public void testAddDirToRootAndCanReadItBackToDir() throws Exception {
-        final VFile root = vfs.root();
+        final VFile root = vfs.getRoot();
         log.debug("mkdir");
         final VFile tmp = vfs.fileManager().mkDir(root, "tmp");
         assertNotNull(tmp);
-        assertEquals("/tmp", tmp.getAbsoluteName());
+        assertEquals("/tmp", tmp.getAbsolutePath());
         assertTrue(tmp.isDir());
         assertEquals(Cf.list(tmp), Cf.list(root.list()));
         log.debug("reading child");
         assertEquals(tmp, root.child("tmp"));
-        assertEquals("/tmp", tmp.getAbsoluteName());
+        assertEquals("/tmp", tmp.getAbsolutePath());
     }
 
     @Test
     public void testAddFileToRootAndAllRelationsBetweenThemAreOk() throws Exception {
-        final VFile root = vfs.root();
+        final VFile root = vfs.getRoot();
         final String newFileName = "HelloWorld.txt";
         final VFile file = vfs.fileManager().touch(root, newFileName);
 
         assertNotNull(file);
 
         assertEquals(newFileName, file.getName());
-        assertEquals("/HelloWorld.txt", file.getAbsoluteName());
+        assertEquals("/HelloWorld.txt", file.getAbsolutePath());
 
         final VFile parent = file.getParent();
         assertNotNull(parent);
@@ -99,15 +103,15 @@ public class ProtoVFSTest extends TestCase {
         assertEquals(file, root.child(newFileName));
         assertEquals(Cf.list(file), Cf.list(root.list()));
 
-        assertEquals(file, vfs.fileManager().select("/HelloWorld.txt"));
+        assertEquals(file, vfs.fileManager().resolve("/HelloWorld.txt"));
     }
 
     @Test
     public void testAddFileToRootAndCanReadItBackToFile() throws Exception {
-        final VFile root = vfs.root();
+        final VFile root = vfs.getRoot();
         final String newFileName = "HelloWorld.txt";
         final VFile file = vfs.fileManager().touch(root, newFileName);
-        final PrintWriter pw = new PrintWriter(file.openOutput());
+        final PrintWriter pw = new PrintWriter(file.openFileOutput());
         final String line = "foobar barfoo";
         pw.print(line);
         pw.close();
@@ -124,7 +128,7 @@ public class ProtoVFSTest extends TestCase {
     }
 
     private String doReadLine(final VFile file) throws IOException {
-        final InputStream input = file.openInput();
+        final InputStream input = file.openFileInput();
         final byte[] bytes = IOUtils.readInputStreamToBytes(input);
         final Scanner s = new Scanner(new ByteArrayInputStream(bytes));
         final String firstLine = s.nextLine().trim();
@@ -134,7 +138,7 @@ public class ProtoVFSTest extends TestCase {
 
     @Test
     public void testCannotAddFileToFileAsChild() throws Exception {
-        final VFile foo = vfs.fileManager().touch(vfs.root(), "foo");
+        final VFile foo = vfs.fileManager().touch(vfs.getRoot(), "foo");
         assertNotNull(foo);
         assertTrue(foo.isFile());
         try {
@@ -147,7 +151,7 @@ public class ProtoVFSTest extends TestCase {
 
     @Test
     public void testAddMultiLevelDirsWithFilesToRootAndCanReadItBackOk() throws Exception {
-        final VFile root = vfs.root();
+        final VFile root = vfs.getRoot();
         final VFile topDir = vfs.fileManager().mkDir(root, "01");
         final VFile midDir = vfs.fileManager().mkDir(topDir, "01");
         final VFile lowDir1 = vfs.fileManager().mkDir(midDir, "01");
@@ -158,16 +162,16 @@ public class ProtoVFSTest extends TestCase {
         assertEquals(Collections.emptyList(), Cf.list(lowDir1.list()));
         assertEquals(Collections.emptyList(), Cf.list(lowDir2.list()));
 
-        final PrintWriter pw1 = new PrintWriter(vfs.fileManager().touch(lowDir1, "tmp.txt").openOutput());
+        final PrintWriter pw1 = new PrintWriter(vfs.fileManager().touch(lowDir1, "tmp.txt").openFileOutput());
         pw1.println("foo");
         pw1.close();
 
-        final PrintWriter pw2 = new PrintWriter(vfs.fileManager().touch(lowDir2, "tmp.txt").openOutput());
+        final PrintWriter pw2 = new PrintWriter(vfs.fileManager().touch(lowDir2, "tmp.txt").openFileOutput());
         pw2.println("bar");
         pw2.close();
 
-        assertEquals("foo", doReadLine(vfs.fileManager().select("/01/01/01/tmp.txt")));
-        assertEquals("bar", doReadLine(vfs.fileManager().select("/01/01/02/tmp.txt")));
+        assertEquals("foo", doReadLine(vfs.fileManager().resolve("/01/01/01/tmp.txt")));
+        assertEquals("bar", doReadLine(vfs.fileManager().resolve("/01/01/02/tmp.txt")));
 
     }
 
@@ -176,8 +180,8 @@ public class ProtoVFSTest extends TestCase {
         final String path = "/tmp/foo/bar/42/tmp";
         final VFile newDir = vfs.fileManager().mkDirs(path);
         assertNotNull(newDir);
-        assertEquals(path, newDir.getAbsoluteName());
-        assertEquals(newDir, vfs.root().child("tmp").child("foo").child("bar").child("42").child("tmp"));
+        assertEquals(path, newDir.getAbsolutePath());
+        assertEquals(newDir, vfs.getRoot().child("tmp").child("foo").child("bar").child("42").child("tmp"));
     }
 
     @Test
@@ -189,18 +193,18 @@ public class ProtoVFSTest extends TestCase {
     }
 
     @Test
-    public void testCannotDeleteRoot() throws Exception {
-        assertFalse(vfs.fileManager().rm(vfs.root()));
+    public void testCannotDeletegetRoot() throws Exception {
+        assertFalse(vfs.fileManager().rm(vfs.getRoot()));
     }
 
     public void testCannotDeleteNonEmptyDir() throws Exception {
         vfs.fileManager().mkDirs("/tmp/foo/bar");
-        assertFalse(vfs.fileManager().rm(vfs.fileManager().select("/tmp/foo")));
+        assertFalse(vfs.fileManager().rm(vfs.fileManager().resolve("/tmp/foo")));
     }
 
     @Test
     public void testDirHasNoDeletedChildren() throws Exception {
-        final VFile root = vfs.root();
+        final VFile root = vfs.getRoot();
         final VFile foo = vfs.fileManager().touch(root, "foo");
         final VFile bar = vfs.fileManager().touch(root, "bar");
         final VFile baz = vfs.fileManager().touch(root, "baz");
@@ -237,14 +241,14 @@ public class ProtoVFSTest extends TestCase {
         assertTrue(vfs.fileManager().rm(file));
 
         try {
-            file.openInput();
+            file.openFileInput();
             fail();
         } catch (VFileNotFoundException e) {
             //ok
         }
 
         try {
-            file.openOutput();
+            file.openFileOutput();
             fail();
         } catch (VFileNotFoundException e) {
             //ok
@@ -292,13 +296,13 @@ public class ProtoVFSTest extends TestCase {
 
     private void testFailCreationAndTouchOnName(final String name) {
         try {
-            vfs.fileManager().touch(vfs.root(), name);
+            vfs.fileManager().touch(vfs.getRoot(), name);
             fail();
         } catch (RuntimeException e) {
             //ok
         }
         try {
-            vfs.fileManager().mkDir(vfs.root(), name);
+            vfs.fileManager().mkDir(vfs.getRoot(), name);
             fail();
         } catch (RuntimeException e) {
             //ok

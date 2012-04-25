@@ -11,7 +11,7 @@ public interface VFileManager {
 
     @Nullable VFile mkDirs(@NotNull final String fullPath);
 
-    @Nullable VFile select(@NotNull final String fullPath);
+    @Nullable VFile resolve(@NotNull final String fullPath);
 
     boolean rm(@NotNull final VFile vfile);
 

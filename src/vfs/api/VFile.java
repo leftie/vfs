@@ -15,7 +15,7 @@ public interface VFile {
 
     String getName();
 
-    String getAbsoluteName();
+    String getAbsolutePath();
 
     @Nullable VFile getParent() throws VFSException;
 
@@ -23,8 +23,8 @@ public interface VFile {
 
     @Nullable VFile child(@NotNull final String name) throws VFSException;
 
-    InputStream openInput() throws VFSException;
+    InputStream openFileInput() throws VFSException;
 
-    OutputStream openOutput() throws VFSException;
+    OutputStream openFileOutput() throws VFSException;
 
 }

@@ -4,7 +4,7 @@ import vfs.exception.VFSException;
 
 public interface VFileSystem {
 
-    VFile root();
+    VFile getRoot();
 
     VFileManager fileManager();
 
