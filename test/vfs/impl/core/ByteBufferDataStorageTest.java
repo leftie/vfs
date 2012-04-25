@@ -8,18 +8,18 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-public class ByteBufferByteSinkAndSrcTest extends TestCase {
+public class ByteBufferDataStorageTest extends TestCase {
 
-    private static final Logger log = LoggerFactory.getLogger(ByteBufferByteSinkAndSrcTest.class);
+    private static final Logger log = LoggerFactory.getLogger(ByteBufferDataStorageTest.class);
 
-    ByteBufferByteSinkAndSrc byteBuffer;
+    ByteBufferDataStorage byteBuffer;
     byte[] inner;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
         inner = new byte[64];
-        byteBuffer = new ByteBufferByteSinkAndSrc(ByteBuffer.wrap(inner));
+        byteBuffer = new ByteBufferDataStorage(ByteBuffer.wrap(inner));
     }
 
     public void testReadAndWrite() throws Exception {

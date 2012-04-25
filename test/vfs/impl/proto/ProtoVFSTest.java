@@ -308,4 +308,5 @@ public class ProtoVFSTest extends TestCase {
             //ok
         }
     }
+
 }

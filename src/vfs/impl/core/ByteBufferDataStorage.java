@@ -6,11 +6,11 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 @NotThreadSafe
-public class ByteBufferByteSinkAndSrc implements ByteSink, ByteSrc {
+public class ByteBufferDataStorage implements ByteSink, ByteSrc {
 
     private ByteBuffer target;
 
-    public ByteBufferByteSinkAndSrc(final ByteBuffer target) {
+    public ByteBufferDataStorage(final ByteBuffer target) {
         this.target = target;
     }
 

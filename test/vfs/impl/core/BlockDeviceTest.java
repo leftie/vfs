@@ -26,8 +26,8 @@ public class BlockDeviceTest extends TestCase {
 
     private void init(final int dataSize) {
         data = new byte[dataSize];
-        final ByteBufferByteSinkAndSrc sinkAndSrc = new ByteBufferByteSinkAndSrc(ByteBuffer.wrap(data));
-        dev = new BlockDevice(TEST_BLOCK_SIZE, sinkAndSrc, sinkAndSrc, (alloc = new SimpleAllocator(dataSize/TEST_BLOCK_SIZE)));
+        final ByteBufferDataStorage storage = new ByteBufferDataStorage(ByteBuffer.wrap(data));
+        dev = new BlockDevice(TEST_BLOCK_SIZE, storage, storage, (alloc = new SimpleAllocator(dataSize/TEST_BLOCK_SIZE)));
     }
 
     public byte[] prepareBytes(final int cnt) {

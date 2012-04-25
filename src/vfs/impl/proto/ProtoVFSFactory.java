@@ -23,7 +23,7 @@ public class ProtoVFSFactory implements VFileSystemFactory {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        final RemoteAccessFileByteSinkAndSrc remoteAccessFileStuff = new RemoteAccessFileByteSinkAndSrc(file);
+        final RemoteAccessFileDataStorage remoteAccessFileStuff = new RemoteAccessFileDataStorage(file);
         final BitSet bitset = remoteAccessFileStuff.loadOccupanceBitMap(cfg.getBlockSize());
         final BlockAllocator alloc = new SimpleAllocator(bitset);
         final BlockDevice device = new BlockDevice(cfg.getBlockSize(), remoteAccessFileStuff, remoteAccessFileStuff, alloc);
@@ -37,9 +37,9 @@ public class ProtoVFSFactory implements VFileSystemFactory {
     @Override
     public ProtoVFS create(final ByteBuffer bb, final VFileSystemConfig cfg) {
 
-        final ByteBufferByteSinkAndSrc byteBufferStuff = new ByteBufferByteSinkAndSrc(bb);
+        final ByteBufferDataStorage storage = new ByteBufferDataStorage(bb);
         final BlockAllocator alloc = new SimpleAllocator(Integer.MAX_VALUE / cfg.getBlockSize());
-        final BlockDevice device = new BlockDevice(cfg.getBlockSize(), byteBufferStuff, byteBufferStuff, alloc);
+        final BlockDevice device = new BlockDevice(cfg.getBlockSize(), storage, storage, alloc);
 
         final ProtoVFS vfs = new ProtoVFS(device, alloc, cfg);
         vfs.writeRoot(0);
@@ -62,9 +62,9 @@ public class ProtoVFSFactory implements VFileSystemFactory {
             throw new RuntimeException("could not assure existance of directory " + parent + " to host a VFS file " + target.getName());
         }
 
-        final RemoteAccessFileByteSinkAndSrc bbStuff;
+        final RemoteAccessFileDataStorage bbStuff;
         try {
-            bbStuff = new RemoteAccessFileByteSinkAndSrc(new RandomAccessFile(target, "rw"));
+            bbStuff = new RemoteAccessFileDataStorage(new RandomAccessFile(target, "rw"));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
