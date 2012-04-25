@@ -136,9 +136,6 @@ public class BlockDevice {
                 new ByteArrayInputStream(bytesWithBlock),
                 blockSize
         );
-        if (!block.isClear() || !allowEmpty) {
-            assert blockToRead == block.getNo();
-        }
         return block;
     }
 
