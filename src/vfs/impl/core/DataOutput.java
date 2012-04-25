@@ -1,17 +1,15 @@
 package vfs.impl.core;
 
-import net.jcip.annotations.NotThreadSafe;
 import vfs.exception.VFSException;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-@NotThreadSafe
-public class BlockWriter {
+public class DataOutput {
     private final OutputStream stream;
     private final int blockNo;
 
-    BlockWriter(final OutputStream stream, final int blockNo) {
+    DataOutput(final OutputStream stream, final int blockNo) {
         this.stream = stream;
         this.blockNo = blockNo;
     }
@@ -26,7 +24,7 @@ public class BlockWriter {
         return blockNo;
     }
 
-    public BlockWriter write(final byte[] bs) {
+    public DataOutput write(final byte[] bs) {
         for (final byte b : bs) {
             write(b);
         }
@@ -34,7 +32,7 @@ public class BlockWriter {
     }
 
 
-    public BlockWriter write(final byte b) {
+    public DataOutput write(final byte b) {
         try {
             stream.write(b);
         } catch (IOException e) {

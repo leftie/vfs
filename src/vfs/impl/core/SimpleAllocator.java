@@ -5,18 +5,18 @@ import net.jcip.annotations.NotThreadSafe;
 import java.util.BitSet;
 
 @NotThreadSafe
-public class NaiveAlloc implements BlockAllocator {
+public class SimpleAllocator implements BlockAllocator {
 
     private final BitSet bs;
 
     private int next;
 
-    public NaiveAlloc(final BitSet bs) {
+    public SimpleAllocator(final BitSet bs) {
         this.bs = bs.get(0, bs.length());
         this.next = bs.nextSetBit(1) + 1;
     }
 
-    public NaiveAlloc(final int cnt) {
+    public SimpleAllocator(final int cnt) {
         this.bs = new BitSet(cnt);
         this.next = 0;
     }
@@ -48,9 +48,6 @@ public class NaiveAlloc implements BlockAllocator {
     }
 
     private int doAlloc(final int pos) {
-        if (pos >= bs.size()) {
-            final int possibleNextFree = bs.nextClearBit(1);
-        }
         if (bs.get(pos)) {
             throw new AssertionError("already allocated " + pos);
         }

@@ -23,10 +23,10 @@ public class ProtoVFSFactory implements VFileSystemFactory {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        final RAFByteSinkAndSrc rafStuff = new RAFByteSinkAndSrc(file);
-        final BitSet bitset = rafStuff.loadOccupanceBitMap(cfg.getBlockSize());
-        final BlockAllocator alloc = new NaiveAlloc(bitset);
-        final BlockDevice device = new BlockDevice(cfg.getBlockSize(), rafStuff, rafStuff, alloc);
+        final RemoteAccessFileByteSinkAndSrc remoteAccessFileStuff = new RemoteAccessFileByteSinkAndSrc(file);
+        final BitSet bitset = remoteAccessFileStuff.loadOccupanceBitMap(cfg.getBlockSize());
+        final BlockAllocator alloc = new SimpleAllocator(bitset);
+        final BlockDevice device = new BlockDevice(cfg.getBlockSize(), remoteAccessFileStuff, remoteAccessFileStuff, alloc);
         final ProtoVFS vfs = new ProtoVFS(device, alloc, cfg);
         if (vfs.getRoot() == null) {
             throw new VFSCorruptException();
@@ -37,9 +37,9 @@ public class ProtoVFSFactory implements VFileSystemFactory {
     @Override
     public ProtoVFS create(final ByteBuffer bb, final VFileSystemConfig cfg) {
 
-        final BBByteSinkAndSrc bbStuff = new BBByteSinkAndSrc(bb);
-        final BlockAllocator alloc = new NaiveAlloc(Integer.MAX_VALUE / cfg.getBlockSize());
-        final BlockDevice device = new BlockDevice(cfg.getBlockSize(), bbStuff, bbStuff, alloc);
+        final ByteBufferByteSinkAndSrc byteBufferStuff = new ByteBufferByteSinkAndSrc(bb);
+        final BlockAllocator alloc = new SimpleAllocator(Integer.MAX_VALUE / cfg.getBlockSize());
+        final BlockDevice device = new BlockDevice(cfg.getBlockSize(), byteBufferStuff, byteBufferStuff, alloc);
 
         final ProtoVFS vfs = new ProtoVFS(device, alloc, cfg);
         vfs.writeRoot(0);
@@ -62,13 +62,13 @@ public class ProtoVFSFactory implements VFileSystemFactory {
             throw new RuntimeException("could not assure existance of directory " + parent + " to host a VFS file " + target.getName());
         }
 
-        final RAFByteSinkAndSrc bbStuff;
+        final RemoteAccessFileByteSinkAndSrc bbStuff;
         try {
-            bbStuff = new RAFByteSinkAndSrc(new RandomAccessFile(target, "rw"));
+            bbStuff = new RemoteAccessFileByteSinkAndSrc(new RandomAccessFile(target, "rw"));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        final BlockAllocator alloc = new NaiveAlloc(Integer.MAX_VALUE / cfg.getBlockSize());
+        final BlockAllocator alloc = new SimpleAllocator(Integer.MAX_VALUE / cfg.getBlockSize());
         final BlockDevice device = new BlockDevice(cfg.getBlockSize(), bbStuff, bbStuff, alloc);
 
         final ProtoVFS vfs = new ProtoVFS(device, alloc, cfg);

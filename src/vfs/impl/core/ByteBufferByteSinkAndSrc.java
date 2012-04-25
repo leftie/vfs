@@ -2,17 +2,16 @@ package vfs.impl.core;
 
 import net.jcip.annotations.NotThreadSafe;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 @NotThreadSafe
-public class BBByteSinkAndSrc implements ByteSink, ByteSrc {
+public class ByteBufferByteSinkAndSrc implements ByteSink, ByteSrc {
 
-    private ByteBuffer bb;
+    private ByteBuffer target;
 
-    public BBByteSinkAndSrc(final ByteBuffer bb) {
-        this.bb = bb;
+    public ByteBufferByteSinkAndSrc(final ByteBuffer target) {
+        this.target = target;
     }
 
     @Override
@@ -22,7 +21,7 @@ public class BBByteSinkAndSrc implements ByteSink, ByteSrc {
 
     @Override
     public void close() {
-        bb = null;
+        target = null;
     }
 
     @Override
@@ -30,11 +29,11 @@ public class BBByteSinkAndSrc implements ByteSink, ByteSrc {
         return new OutputStream() {
             int writeCnt = 0;
             @Override
-            public void write(final int b) throws IOException {
+            public void write(final int b) {
                 if (pos >= Integer.MAX_VALUE) {
                     throw new RuntimeException();
                 }
-                bb.put((int) pos + writeCnt++, (byte) (b & 0xFF));
+                target.put((int) pos + writeCnt++, (byte) (b & 0xFF));
             }
         };
     }
@@ -43,7 +42,7 @@ public class BBByteSinkAndSrc implements ByteSink, ByteSrc {
     public byte[] read(final long from, final int length) {
         final byte[] out = new byte[length];
         for (int i = 0; i < length; i++) {
-            out[i] = bb.get(i + (int) from);
+            out[i] = target.get(i + (int) from);
         }
         return out;
     }

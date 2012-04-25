@@ -5,7 +5,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.io.IOUtils;
-import vfs.impl.proto.VFS;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -17,7 +16,7 @@ public class BlockDeviceTest extends TestCase {
 
     private BlockDevice dev;
     private byte[] data;
-    private NaiveAlloc alloc;
+    private SimpleAllocator alloc;
 
     @Override
     public void setUp() throws Exception {
@@ -27,8 +26,8 @@ public class BlockDeviceTest extends TestCase {
 
     private void init(final int dataSize) {
         data = new byte[dataSize];
-        final BBByteSinkAndSrc sinkAndSrc = new BBByteSinkAndSrc(ByteBuffer.wrap(data));
-        dev = new BlockDevice(TEST_BLOCK_SIZE, sinkAndSrc, sinkAndSrc, (alloc = new NaiveAlloc(dataSize/TEST_BLOCK_SIZE)));
+        final ByteBufferByteSinkAndSrc sinkAndSrc = new ByteBufferByteSinkAndSrc(ByteBuffer.wrap(data));
+        dev = new BlockDevice(TEST_BLOCK_SIZE, sinkAndSrc, sinkAndSrc, (alloc = new SimpleAllocator(dataSize/TEST_BLOCK_SIZE)));
     }
 
     public byte[] prepareBytes(final int cnt) {
@@ -49,7 +48,7 @@ public class BlockDeviceTest extends TestCase {
 
     @Test
     public void testSingleBlockWriteAndRead() throws Exception {
-        final BlockWriter writer = dev.openWriter();
+        final DataOutput writer = dev.openWriter();
         final byte[] bytes = prepareBytes(32);
 
         final int block = writer.write(bytes).close();
@@ -63,7 +62,7 @@ public class BlockDeviceTest extends TestCase {
 
     @Test
     public void testMultiBlockWriteAndRead() throws Exception {
-        final BlockWriter writer = dev.openWriter();
+        final DataOutput writer = dev.openWriter();
         final byte[] bytes = prepareBytes(1025);
 
         final int block = writer.write(bytes).close();
@@ -80,7 +79,7 @@ public class BlockDeviceTest extends TestCase {
         log.info("data size is " + dataSize);
 
         final byte[] bytes = prepareBytes(dataSize);
-        final BlockWriter writer = dev.openWriter();
+        final DataOutput writer = dev.openWriter();
         final int firstBlock = writer.write(bytes).close();
         assertEquals(0, firstBlock);
 
@@ -93,7 +92,7 @@ public class BlockDeviceTest extends TestCase {
         log.info("data size is " + dataSize);
 
         final byte[] bytes = prepareBytes(dataSize);
-        final BlockWriter writer = dev.openWriter();
+        final DataOutput writer = dev.openWriter();
         final int firstBlock = writer.write(bytes).close();
         assertEquals(0, firstBlock);
 
@@ -142,20 +141,6 @@ public class BlockDeviceTest extends TestCase {
         log.info(Arrays.toString(data));
         final InputStream is = dev.openReader(blockNo).asStream();
         assertEquals(-1, is.read());
-    }
-
-    @Test
-    public void testDecodeFromEmptyReader() throws Exception {
-        int block = alloc.allocAnywhere(1);
-        block = alloc.allocNextTo(block);
-        assertTrue(block > 0);
-        dev.touch(block);
-        final InputStream is = dev.openReader(block).asStream();
-        final VFS.DirEntry.Builder bld = VFS.DirEntry.newBuilder();
-        while (bld.mergeDelimitedFrom(is)) {
-            throw new RuntimeException("fail!");
-        }
-        assertTrue(true);
     }
 
 }

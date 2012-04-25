@@ -16,11 +16,11 @@ final class ProtoVFile implements VFile {
     private final ProtoVFS fs;
     private final String name;
     private final NodeFlags flags;
-    private final VFS.Node protoNode;
+    private final VFSModel.Node protoNode;
 
     private final String absolutePath;
 
-    ProtoVFile(final ProtoVFS fs, final String name, final String absolutePath, final NodeFlags flags, final VFS.Node protoNode) {
+    ProtoVFile(final ProtoVFS fs, final String name, final String absolutePath, final NodeFlags flags, final VFSModel.Node protoNode) {
         this.fs = fs;
         this.name = name;
         this.flags = flags;
@@ -91,7 +91,7 @@ final class ProtoVFile implements VFile {
         );
     }
 
-    VFS.Node getProtoNode() {
+    VFSModel.Node getProtoNode() {
         return protoNode;
     }
 

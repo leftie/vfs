@@ -8,26 +8,26 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-public class BBByteSinkAndSrcTest extends TestCase {
+public class ByteBufferByteSinkAndSrcTest extends TestCase {
 
-    private static final Logger log = LoggerFactory.getLogger(BBByteSinkAndSrcTest.class);
+    private static final Logger log = LoggerFactory.getLogger(ByteBufferByteSinkAndSrcTest.class);
 
-    BBByteSinkAndSrc bb;
+    ByteBufferByteSinkAndSrc byteBuffer;
     byte[] inner;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
         inner = new byte[64];
-        bb = new BBByteSinkAndSrc(ByteBuffer.wrap(inner));
+        byteBuffer = new ByteBufferByteSinkAndSrc(ByteBuffer.wrap(inner));
     }
 
     public void testReadAndWrite() throws Exception {
-        final OutputStream out = bb.openOut(2);
+        final OutputStream out = byteBuffer.openOut(2);
         out.write(new byte[]{0, 1, 2, 3});
         out.close();
         log.info(Arrays.toString(inner));
 
-        assertTrue(Arrays.equals(new byte[]{0, 0, 0, 1, 2, 3, 0, 0}, bb.read(0, 8)));
+        assertTrue(Arrays.equals(new byte[]{0, 0, 0, 1, 2, 3, 0, 0}, byteBuffer.read(0, 8)));
     }
 }

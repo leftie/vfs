@@ -3,10 +3,10 @@ package vfs.impl.core;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class BlockReader {
+public class DataInput {
     private final InputStream stream;
 
-    BlockReader(final InputStream stream) {
+    DataInput(final InputStream stream) {
         this.stream = stream;
     }
 

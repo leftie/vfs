@@ -28,7 +28,7 @@ public class BlockDevice {
         this.src = src;
     }
 
-    public BlockWriter openWriter(final int blockNo) {
+    public DataOutput openWriter(final int blockNo) {
         log.debug("openWriter({})", blockNo);
         final int startBlock;
         if (blockNo < 0) {
@@ -43,13 +43,13 @@ public class BlockDevice {
                 log.debug("blanked {} blocks of tail", blanked);
             }
         }
-        return new BlockWriter(new BlockWritingOutputStream(startBlock, blockSize, alloc, sink), startBlock);
+        return new DataOutput(new BlockWritingOutputStream(startBlock, blockSize, alloc, sink), startBlock);
     }
 
-    public BlockWriter openAppender(final int startBlockNo) {
+    public DataOutput openAppender(final int startBlockNo) {
         final Block toAppendTo = last(startBlockNo);
         log.debug("to append to " + toAppendTo.getNo());
-        return new BlockWriter(
+        return new DataOutput(
                 new BlockWritingOutputStream(toAppendTo.getNo(), blockSize, alloc, sink, toAppendTo.getData()),
                 startBlockNo
         );
@@ -103,7 +103,7 @@ public class BlockDevice {
         return blanked;
     }
 
-    public BlockWriter openWriter() { //todo: is it really needed?
+    public DataOutput openWriter() { //todo: is it really needed?
         return openWriter(-1);
     }
 
@@ -115,11 +115,11 @@ public class BlockDevice {
         return blockSize * blockNo;
     }
 
-    public BlockReader openReader(final int blockNo) {
+    public DataInput openReader(final int blockNo) {
         if (alloc.isFree(blockNo)) {
             throw new IllegalStateException("reader for block " + blockNo + " required, but block is marked as free");
         }
-        return new BlockReader(new BlockReadingInputStream(blockNo));
+        return new DataInput(new BlockReadingInputStream(blockNo));
     }
 
     private Block readPossiblyEmptyBlock(final int blockToRead) {

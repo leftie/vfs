@@ -12,8 +12,8 @@ import vfs.exception.VFSException;
 import vfs.exception.VFileNotFoundException;
 import vfs.impl.core.BlockAllocator;
 import vfs.impl.core.BlockDevice;
-import vfs.impl.core.BlockReader;
-import vfs.impl.core.BlockWriter;
+import vfs.impl.core.DataInput;
+import vfs.impl.core.DataOutput;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,9 +47,9 @@ class ProtoVFS implements VFileSystem {
         final int rootNo = allocator.allocAnywhere(1);
         final int dataNo = allocator.allocNextTo(rootNo);
         assert rootNo == 0;
-        final BlockWriter writer = device.openWriter(rootNo);
+        final DataOutput writer = device.openWriter(rootNo);
         try {
-            final VFS.Node node = VFS.Node.newBuilder()
+            final VFSModel.Node node = VFSModel.Node.newBuilder()
                     .setNo(ROOT_BLOCK_NO)
                     .setName(rootName)
                     .setDataBlockNo(dataNo)
@@ -76,7 +76,7 @@ class ProtoVFS implements VFileSystem {
     public ProtoVFile getRoot() {
         final InputStream is = device.openReader(ROOT_BLOCK_NO).asStream();
         try {
-            final VFS.Node rootNode = VFS.Node.parseDelimitedFrom(is);
+            final VFSModel.Node rootNode = VFSModel.Node.parseDelimitedFrom(is);
             return buildFile(rootNode, null);
         } catch (IOException e) {
             throw new VFSException(e);
@@ -92,14 +92,14 @@ class ProtoVFS implements VFileSystem {
         if (!file.isDir()) {
             throw new IllegalArgumentException("is not a dir :" + file);
         }
-        final BlockReader reader = device.openReader(file.getProtoNode().getDataBlockNo());
+        final DataInput reader = device.openReader(file.getProtoNode().getDataBlockNo());
         log.debug("data block for {} is {}", file, file.getProtoNode().getDataBlockNo());
         try {
             final InputStream input = reader.asStream();
             final List<ProtoVFile> out = Cf.newLinkedList();
-            final VFS.DirEntry.Builder nextEntry = VFS.DirEntry.newBuilder();
+            final VFSModel.DirEntry.Builder nextEntry = VFSModel.DirEntry.newBuilder();
             while (nextEntry.mergeDelimitedFrom(input)) {
-                final VFS.DirEntry readEntry = nextEntry.build();
+                final VFSModel.DirEntry readEntry = nextEntry.build();
                 log.debug("read entry {}", readEntry);
                 out.add(getFile(readEntry, file));
                 nextEntry.clear();
@@ -112,7 +112,7 @@ class ProtoVFS implements VFileSystem {
         }
     }
 
-    private ProtoVFile getFile(final VFS.DirEntry entry, final ProtoVFile parent) {
+    private ProtoVFile getFile(final VFSModel.DirEntry entry, final ProtoVFile parent) {
         return doReadFileFromDevice(entry.getInode(), parent);
     }
 
@@ -147,12 +147,12 @@ class ProtoVFS implements VFileSystem {
         if (allocator.isFree(fileNo)) {
             throw new VFileNotFoundException("not found: " + file.toString());
         }
-        final BlockReader metaReader = device.openReader(fileNo);
-        final VFS.Node metaNode = doReadNodeFrom(metaReader);
+        final DataInput metaReader = device.openReader(fileNo);
+        final VFSModel.Node metaNode = doReadNodeFrom(metaReader);
         final int dataBlockNo = metaNode.getDataBlockNo();
         log.debug("data block for {} is {}", file.getAbsolutePath(), dataBlockNo);
         try {
-            final BlockReader dataReader = device.openReader(dataBlockNo);
+            final DataInput dataReader = device.openReader(dataBlockNo);
             try {
                 return new InputStream() {
                     final InputStream delegate = dataReader.asStream();
@@ -198,11 +198,11 @@ class ProtoVFS implements VFileSystem {
         }
         synchronized (device) {
 
-            final BlockReader reader = device.openReader(nodeNo);
+            final DataInput reader = device.openReader(nodeNo);
             try {
                 final InputStream is = reader.asStream();
                 try {
-                    final VFS.Node node = VFS.Node.parseDelimitedFrom(is);
+                    final VFSModel.Node node = VFSModel.Node.parseDelimitedFrom(is);
                     assert node != null;
                     assert nodeNo == node.getNo();
 
@@ -216,7 +216,7 @@ class ProtoVFS implements VFileSystem {
         }
     }
 
-    private ProtoVFile buildFile(final VFS.Node node, @Nullable final ProtoVFile parent) {
+    private ProtoVFile buildFile(final VFSModel.Node node, @Nullable final ProtoVFile parent) {
         return new ProtoVFile(
                 this,
                 node.getName(),
@@ -246,7 +246,7 @@ class ProtoVFS implements VFileSystem {
 
         assert newFileNo != parentNo;
 
-        final VFS.Node newNode = VFS.Node.newBuilder()
+        final VFSModel.Node newNode = VFSModel.Node.newBuilder()
                 .setFlags(new NodeFlags(false, cfg.isDoCompress()).asIntValue())
                 .setNo(newFileNo)
                 .setParentNo(parentDir.getProtoNode().getNo())
@@ -257,7 +257,7 @@ class ProtoVFS implements VFileSystem {
                 .setSize(0).build();
 
         log.debug("writing data-node " + newNode + " to " + newFileNo);
-        final BlockWriter writer = device.openWriter(newFileNo);
+        final DataOutput writer = device.openWriter(newFileNo);
         try {
             writeNodeTo(newNode, writer);
             device.touch(dataBlockNo);
@@ -266,9 +266,9 @@ class ProtoVFS implements VFileSystem {
         }
         final int parendDataNodeNo = parentDir.getProtoNode().getDataBlockNo();
         log.debug("writing parent dir-entry to " + parendDataNodeNo);
-        final BlockWriter toParentAppender = device.openAppender(parendDataNodeNo);
+        final DataOutput toParentAppender = device.openAppender(parendDataNodeNo);
         try {
-            final VFS.DirEntry newDirEntry = VFS.DirEntry.newBuilder().setInode(newFileNo).setName(newFileName).build();
+            final VFSModel.DirEntry newDirEntry = VFSModel.DirEntry.newBuilder().setInode(newFileNo).setName(newFileName).build();
             newDirEntry.writeDelimitedTo(toParentAppender.asStream());
         } catch (IOException e) {
             throw new VFSException(e);
@@ -339,15 +339,15 @@ class ProtoVFS implements VFileSystem {
         return pathname;
     }
 
-    VFS.Node doReadNodeFrom(final BlockReader reader) throws VFSException {
+    VFSModel.Node doReadNodeFrom(final DataInput reader) throws VFSException {
         try {
-            return VFS.Node.parseDelimitedFrom(reader.asStream());
+            return VFSModel.Node.parseDelimitedFrom(reader.asStream());
         } catch (IOException e) {
             throw new VFSException(e);
         }
     }
 
-    BlockWriter writeNodeTo(final VFS.Node node, final BlockWriter writer) throws VFSException {
+    DataOutput writeNodeTo(final VFSModel.Node node, final DataOutput writer) throws VFSException {
         try {
             node.writeDelimitedTo(writer.asStream());
             return writer;
@@ -357,7 +357,7 @@ class ProtoVFS implements VFileSystem {
     }
 
 
-    BlockWriter writeDirEntryTo(final VFS.DirEntry entry, final BlockWriter writer) throws VFSException {
+    DataOutput writeDirEntryTo(final VFSModel.DirEntry entry, final DataOutput writer) throws VFSException {
         try {
             entry.writeDelimitedTo(writer.asStream());
             return writer;
@@ -366,7 +366,7 @@ class ProtoVFS implements VFileSystem {
         }
     }
 
-    void writeDirEntryTo(final VFS.DirEntry entry, final OutputStream stream) throws VFSException {
+    void writeDirEntryTo(final VFSModel.DirEntry entry, final OutputStream stream) throws VFSException {
         try {
             entry.writeDelimitedTo(stream);
         } catch (IOException e) {
@@ -388,9 +388,9 @@ class ProtoVFS implements VFileSystem {
         final int blockForNewHead = allocator.allocAnywhere(1);
         final int blockForNewDirEntries = allocator.allocAnywhere(1);
         log.debug("head is {}, data for dir is {}", blockForNewHead, blockForNewDirEntries);
-        final BlockWriter dirWriter = device.openWriter(blockForNewHead);
+        final DataOutput dirWriter = device.openWriter(blockForNewHead);
         final NodeFlags flags = new NodeFlags(true, false);
-        final VFS.Node dirNode = VFS.Node.newBuilder()
+        final VFSModel.Node dirNode = VFSModel.Node.newBuilder()
                 .setName(dirName)
                 .setDataBlockNo(blockForNewDirEntries)
                 .setParentNo(parentDir.getProtoNode().getNo())
@@ -403,9 +403,9 @@ class ProtoVFS implements VFileSystem {
             dirWriter.close();
         }
 
-        final BlockWriter parentAppender = device.openAppender(parentDir.getProtoNode().getDataBlockNo());
+        final DataOutput parentAppender = device.openAppender(parentDir.getProtoNode().getDataBlockNo());
         try {
-            final VFS.DirEntry dirEntry = VFS.DirEntry.newBuilder()
+            final VFSModel.DirEntry dirEntry = VFSModel.DirEntry.newBuilder()
                     .setInode(blockForNewHead)
                     .setName(dirName)
                     .build();
@@ -483,7 +483,7 @@ class ProtoVFS implements VFileSystem {
         try {
             for (final ProtoVFile anyChild : allChildren) {
                 if (anyChild.getProtoNode().getNo() != child.getProtoNode().getNo()) {
-                    final VFS.DirEntry entry = VFS.DirEntry.newBuilder()
+                    final VFSModel.DirEntry entry = VFSModel.DirEntry.newBuilder()
                             .setInode(anyChild.getProtoNode().getNo())
                             .setName(anyChild.getProtoNode().getName()).build();
                     writeDirEntryTo(entry, parentDataStream);
@@ -499,7 +499,7 @@ class ProtoVFS implements VFileSystem {
             }
         }
 
-        final VFS.Node childProto = child.getProtoNode();
+        final VFSModel.Node childProto = child.getProtoNode();
         device.freeStartingWith(childProto.getNo());
         device.freeStartingWith(childProto.getDataBlockNo());
         return true;
