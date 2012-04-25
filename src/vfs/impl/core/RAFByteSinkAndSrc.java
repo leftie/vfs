@@ -88,6 +88,24 @@ public class RAFByteSinkAndSrc implements ByteSink, ByteSrc {
                 }
                 file.writeByte(b & 0xff);
             }
+
+            @Override
+            public void write(final byte[] b) throws IOException {
+                if (!positioned) {
+                    file.seek(pos);
+                    positioned = true;
+                }
+                file.write(b);
+            }
+
+            @Override
+            public void write(final byte[] b, final int off, final int len) throws IOException {
+                if (!positioned) {
+                    file.seek(pos);
+                    positioned = true;
+                }
+                file.write(b, off, len);
+            }
         };
     }
 
