@@ -23,10 +23,10 @@ public class ProtoVFSFactory implements VFileSystemFactory {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        final RemoteAccessFileDataStorage remoteAccessFileStuff = new RemoteAccessFileDataStorage(file);
-        final BitSet bitset = remoteAccessFileStuff.loadOccupanceBitMap(cfg.getBlockSize());
+        final RandomAccessFileDataStorage storage = new RandomAccessFileDataStorage(file);
+        final BitSet bitset = storage.loadOccupanceBitMap(cfg.getBlockSize());
         final BlockAllocator alloc = new SimpleAllocator(bitset);
-        final BlockDevice device = new BlockDevice(cfg.getBlockSize(), remoteAccessFileStuff, remoteAccessFileStuff, alloc);
+        final BlockDevice device = new BlockDevice(cfg.getBlockSize(), storage, storage, alloc);
         final ProtoVFS vfs = new ProtoVFS(device, alloc, cfg);
         if (vfs.getRoot() == null) {
             throw new VFSCorruptException();
@@ -62,9 +62,9 @@ public class ProtoVFSFactory implements VFileSystemFactory {
             throw new RuntimeException("could not assure existance of directory " + parent + " to host a VFS file " + target.getName());
         }
 
-        final RemoteAccessFileDataStorage bbStuff;
+        final RandomAccessFileDataStorage bbStuff;
         try {
-            bbStuff = new RemoteAccessFileDataStorage(new RandomAccessFile(target, "rw"));
+            bbStuff = new RandomAccessFileDataStorage(new RandomAccessFile(target, "rw"));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }

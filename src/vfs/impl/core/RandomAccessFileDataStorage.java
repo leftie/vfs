@@ -11,11 +11,11 @@ import java.io.RandomAccessFile;
 import java.util.BitSet;
 
 @NotThreadSafe
-public class RemoteAccessFileDataStorage implements ByteSink, ByteSrc {
+public class RandomAccessFileDataStorage implements ByteSink, ByteSrc {
 
     private final RandomAccessFile file;
 
-    public RemoteAccessFileDataStorage(final RandomAccessFile file) {
+    public RandomAccessFileDataStorage(final RandomAccessFile file) {
         this.file = file;
     }
 
