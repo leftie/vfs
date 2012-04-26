@@ -60,7 +60,10 @@ class Block {
     }
 
     private static int readInt(final byte[] bytes, final int start) {
-        return (bytes[start] << 24) + (bytes[start + 1] << 16) + (bytes[start + 2] << 8) + bytes[start + 3];
+        return ((bytes[start] & 0xff) << 24)
+                + ((bytes[start + 1] & 0xff) << 16)
+                + ((bytes[start + 2] & 0xff) << 8)
+                + (bytes[start + 3] & 0xff);
     }
 
     private static void writeInt(final byte[] bytes, final int pos, final int value) {

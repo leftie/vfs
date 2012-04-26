@@ -45,7 +45,6 @@ public class BlockTest extends TestCase {
     private static Block encodeDecodeAndCompare(final Block orig, final byte[] origPayload) throws Exception {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream(BLOCK_SIZE);
         Block.encode(baos, orig, BLOCK_SIZE);
-        System.out.println(Arrays.toString(baos.toByteArray()));
         final ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         final Block decoded = Block.decode(bais, BLOCK_SIZE);
         assertEquals(orig, decoded);
@@ -53,4 +52,13 @@ public class BlockTest extends TestCase {
         return decoded;
     }
 
+    @Test
+    public void testLargeBlockNos() throws Exception {
+        for (int i = 0; i < 102400; i++) {
+            Block block = new Block(i, i + 1, PAYLOAD);
+            assertEquals(i, block.getNo());
+            assertEquals(i+1, block.getNext());
+            assertEquals(block , encodeDecodeAndCompare(block, PAYLOAD));
+        }
+    }
 }

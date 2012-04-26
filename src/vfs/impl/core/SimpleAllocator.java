@@ -11,18 +11,18 @@ public class SimpleAllocator implements BlockAllocator {
 
     private int next;
 
-    public SimpleAllocator(final BitSet bs) {
-        this.bs = bs.get(0, bs.length());
-        this.next = bs.nextSetBit(1) + 1;
+    public SimpleAllocator(final BitSet src) {
+        this.bs = src.get(0, src.length());
+        this.next = src.nextSetBit(1) + 1;
     }
 
-    public SimpleAllocator(final int cnt) {
-        this.bs = new BitSet(cnt);
+    public SimpleAllocator(final int blockCnt) {
+        this.bs = new BitSet(blockCnt);
         this.next = 0;
     }
 
     @Override
-    public int allocAnywhere(final int num) {
+    public int allocAnywhere(final int blockNum) {
         return doAlloc(next);
     }
 
@@ -39,8 +39,9 @@ public class SimpleAllocator implements BlockAllocator {
     @Override
     public void free(final int startBlock, final int num) {
         bs.clear(startBlock, startBlock + num);
-        next = startBlock;
+        next = Math.min(next, startBlock);
     }
+
 
     @Override
     public boolean isFree(final int block) {
@@ -52,7 +53,11 @@ public class SimpleAllocator implements BlockAllocator {
             throw new AssertionError("already allocated " + pos);
         }
         bs.set(pos);
-        next = bs.nextClearBit(pos);
+        next = findNext(pos + 1);
         return pos;
+    }
+
+    private int findNext(final int startingFrom) {
+        return bs.nextClearBit(startingFrom);
     }
 }
